@@ -1,0 +1,403 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>ものさし（ながさ）</title>
+  <style>
+    *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+    body{ margin:0; font-family: system-ui,-apple-system,"Hiragino Kaku Gothic ProN","Noto Sans JP",sans-serif;
+      background:#f4f6fb; color:#1b1f2a; user-select:none; }
+    .wrap{ max-width:980px; margin:0 auto; padding:10px 12px 18px; }
+    .card{ background:#fff; border:1px solid #e7eaf3; border-radius:16px; padding:12px; }
+    #rotate{ position:fixed; inset:0; z-index:99999; background:#0f172a; color:#fff;
+      display:none; align-items:center; justify-content:center; text-align:center; padding:24px; }
+    #rotate .inner{ font-size:20px; font-weight:800; line-height:1.7; }
+    .abox{ width:54px;height:50px;border:2px solid #c7ccda;border-radius:10px;
+      display:inline-flex;align-items:center;justify-content:center;font-size:26px;font-weight:800;
+      vertical-align:middle; }
+    .abox.act{ border-color:#2b66ff;background:#eef2ff; }
+    .kp{ width:54px;height:50px;font-size:22px;font-weight:800;border:1px solid #c7ccda;
+      background:#fff;border-radius:10px;cursor:pointer; }
+    .kp:active{ transform:translateY(1px); }
+    .kp.ok{ background:#E1F5EE;color:#085041;border-color:#5DCAA5; }
+    .home-title{ font-size:18px;font-weight:800;text-align:center;margin:6px 0 16px; }
+    .home-grid{ max-width:560px;margin:0 auto;display:flex;flex-direction:column;gap:12px; }
+    .home-main{ background:#fff;border:2px solid #2b66ff;border-radius:16px;padding:38px 16px;
+      text-align:center;display:flex;align-items:center;justify-content:center;gap:14px;cursor:pointer; }
+    .home-main .t{ font-size:26px;font-weight:800;color:#1b3a8a; }
+    .home-row{ display:flex;gap:12px; }
+    .home-sub{ flex:1;background:#fff;border:1px solid #c7ccda;border-radius:12px;padding:13px 12px;
+      text-align:center;display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer; }
+    .home-sub .t{ font-size:15px;font-weight:700;color:#3a4150; }
+    .home-sub:active,.home-main:active{ transform:translateY(1px); }
+    .backbtn{ border:1px solid #c7ccda;background:#fff;border-radius:10px;padding:6px 12px;
+      font-size:14px;font-weight:700;cursor:pointer; }
+    .bar{ display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:7px; }
+    .bar2{ display:flex;flex-wrap:wrap;gap:14px;align-items:center; }
+    .seglabel{ font-size:12px;color:#8a90a2;margin-right:5px; }
+    .lvbtn{ padding:6px 11px;font-size:15px;font-weight:800;border:1px solid #c7ccda;
+      background:#fff;border-radius:10px;cursor:pointer; }
+    .lvbtn.on{ background:#eef2ff;color:#2b66ff;border-color:#2b66ff; }
+    .seg{ display:inline-flex;border:1px solid #c7ccda;border-radius:10px;overflow:hidden; }
+    .seg button{ border:none;border-radius:0;font-size:14px;font-weight:700;padding:7px 13px;
+      background:#fff;color:#5b6478;cursor:pointer; }
+    .seg button+button{ border-left:1px solid #c7ccda; }
+    .seg button.on{ background:#eef2ff;color:#2b66ff; }
+    .rulerbox{ position:relative; }
+    .flashC{ animation:bgCorrect .45s ease; }
+    .flashW{ animation:bgWrong .45s ease; }
+    @keyframes bgCorrect{ 0%{ background:#b6f0b6; } 60%{ background:#dffadf; } 100%{ background:#fff; } }
+    @keyframes bgWrong{ 0%{ background:#ffb3b3; } 60%{ background:#ffe0e0; } 100%{ background:#fff; } }
+    .shake{ animation:shake .22s ease; }
+    @keyframes shake{ 0%,100%{ transform:translateX(0); } 20%{ transform:translateX(-8px); }
+      40%{ transform:translateX(8px); } 60%{ transform:translateX(-6px); } 80%{ transform:translateX(6px); } }
+    .starParticle{ position:absolute;font-size:30px;pointer-events:none;z-index:20;animation:starFloat .75s ease forwards; }
+    @keyframes starFloat{ 0%{ opacity:1;transform:translate(-50%,0) scale(.8); }
+      40%{ opacity:1;transform:translate(-50%,-52px) scale(1.3); }
+      100%{ opacity:0;transform:translate(-50%,-94px) scale(1); } }
+    @media (orientation:portrait){ #rotate{ display:flex; } }
+    @media (max-height:460px){
+      .wrap{ padding:5px 10px 6px; }
+      .card{ padding:8px; }
+      .bar{ margin-bottom:4px; }
+      .seglabel{ display:none; }
+      .lvbtn{ padding:5px 9px;font-size:14px; }
+      .seg button{ padding:6px 10px;font-size:13px; }
+      .backbtn{ padding:5px 10px;font-size:13px; }
+      .abox{ width:44px;height:38px;font-size:21px; }
+      .kp{ width:44px;height:38px;font-size:18px; }
+      #stage{ height:84px; }
+      #fb{ height:20px!important;font-size:15px!important;margin-top:3px!important; }
+      #keypad{ gap:5px!important; }
+      .rulerbox{ padding:4px!important; }
+      .answerrow{ margin-top:5px!important; }
+    }
+</style>
+</head>
+<body>
+  <div id="rotate"><div class="inner">📱➡️<br>よこむきに してね</div></div>
+  <div class="wrap">
+    <div class="card" id="app"></div>
+  </div>
+  <script>
+  (function(){
+    "use strict";
+    // === LOGIC ===
+    function ri(a,b){ return Math.floor(Math.random()*(b-a+1))+a; }
+
+    // stage: 'read'(level 1..4) / 'mm' / 'offset' → { start, end, ask }  (mm単位 0..99)
+    function generateProblem(stage, level){
+      if(stage==='mm'){ return { start:0, end:ri(11,99), ask:'mm' }; }
+      if(stage==='offset'){
+        var s=ri(5,38), e=s+ri(15,55); if(e>99) e=99;
+        return { start:s, end:e, ask:'cmmm' };
+      }
+      // stage 'read'
+      if(level===1){ return { start:0, end:ri(1,9)*10, ask:'cm' }; }     // 何cmぴったり
+      if(level===2){ return { start:0, end:ri(2,18)*5, ask:'cmmm' }; }   // ◯cm5mm（5mm刻み）
+      if(level===3){                                                     // 同じcm台で1mm刻み（0cm台も含む）
+        var base=ri(0,9); return { start:0, end:base*10+ri(1,9), ask:'cmmm' };
+      }
+      // level 4: cmをまたぐ・境界（◯cm9mm/次のcm直前）を厚めに
+      var end = (Math.random()<0.5) ? ri(1,9)*10+ri(8,9) : ri(11,99);
+      return { start:0, end:end, ask:'cmmm' };
+    }
+
+    function splitLen(lenMm){ return { cm:Math.floor(lenMm/10), mm:lenMm%10, totalMm:lenMm }; }
+
+    // 入力(文字列) が正解か。未入力は ''
+    function judge(prob, inCm, inMm){
+      var len = prob.end - prob.start;
+      if(prob.ask==='cm'){ return inCm!=='' && parseInt(inCm,10)===len/10; }
+      if(prob.ask==='mm'){ return inMm!=='' && parseInt(inMm,10)===len; }
+      return inCm!=='' && inMm!=='' &&
+        parseInt(inCm,10)===Math.floor(len/10) && parseInt(inMm,10)===len%10;
+    }
+
+    // === RULER (drawing) ===
+    var SVGNS='http://www.w3.org/2000/svg';
+    var X0=46, PER_MM=5;
+    function mmToX(mm){ return X0 + mm*PER_MM; }
+    var stage; // <svg> 要素（ステージ画面のとき DOM にある）
+    function svgAdd(tag, attrs){ var e=document.createElementNS(SVGNS,tag);
+      for(var k in attrs) e.setAttribute(k, attrs[k]); stage.appendChild(e); return e; }
+    function clearStage(){ while(stage.firstChild) stage.removeChild(stage.firstChild); }
+
+    function drawEasyRuler(){
+      svgAdd('rect',{x:X0-22,y:64,width:100*PER_MM+44,height:48,rx:3,
+        fill:'#eef1f7',stroke:'#c7ccda','stroke-width':1});
+      for(var mm=0; mm<=100; mm++){
+        var h=(mm%10===0)?17:(mm%5===0)?11:7;
+        svgAdd('line',{x1:mmToX(mm),x2:mmToX(mm),y1:64,y2:64+h,
+          stroke:'#5b6478','stroke-width':mm%10===0?1.3:0.7});
+      }
+      for(var c=0; c<=10; c++){
+        var t=svgAdd('text',{x:mmToX(c*10),y:104,'text-anchor':'middle','font-size':13,fill:'#1b1f2a'});
+        t.textContent=c;
+      }
+    }
+
+    function svgImage(attrs){
+      var e=document.createElementNS(SVGNS,'image');
+      for(var k in attrs){ if(k!=='href') e.setAttribute(k,attrs[k]); }
+      e.setAttribute('href',attrs.href);
+      e.setAttributeNS('http://www.w3.org/1999/xlink','xlink:href',attrs.href);
+      stage.appendChild(e); return e;
+    }
+
+    var WOOD_IMG='assets/takejaku-strip.png';
+    var WOOD_IMG_W=790, WOOD_IMG_H=240;
+    var WOOD_PX0=4, WOOD_PX100=722;   // 画像内の 0mm/100mm のpx（実測較正済）
+    var WOOD_H=56;                           // 表示する帯の厚み
+    function drawWoodRuler(){
+      var scaleX=PER_MM*100/(WOOD_PX100-WOOD_PX0); // 横: 画像px→SVG倍率
+      var imgW=WOOD_IMG_W*scaleX;
+      var imgX=mmToX(0) - WOOD_PX0*scaleX;   // 画像の0を mmToX(0) に合わせる
+      var imgY=64;
+      svgImage({ x:imgX, y:imgY, width:imgW, height:WOOD_H,
+        href:WOOD_IMG, 'preserveAspectRatio':'none' });
+    }
+
+    // === OBJECT ===
+    var ITEMS=[
+      {name:'りぼん', color:'#ED93B1'},
+      {name:'えんぴつ',color:'#F2B441'},
+      {name:'ひも',   color:'#7FB5E6'},
+      {name:'テープ', color:'#9BD17F'}
+    ];
+    function pickItem(){ return ITEMS[Math.floor(Math.random()*ITEMS.length)]; }
+
+    function drawObject(prob, item){
+      var xs=mmToX(prob.start), xe=mmToX(prob.end);
+      svgAdd('rect',{x:xs,y:42,width:Math.max(xe-xs,2),height:12,rx:2,fill:item.color});
+      svgAdd('path',{d:'M '+xe+' 62 l -7 -13 h 14 z', fill:'#D85A30'});       // 終点・赤
+      if(prob.start>0){ svgAdd('path',{d:'M '+xs+' 62 l -6 -11 h 12 z', fill:'#888780'}); } // 始点・灰
+    }
+
+    // === INPUT/UI ===
+    var ST={ stage:'home', level:1, ruler:'easy', mode:'practice',
+      prob:null, item:null, inCm:'', inMm:'', active:'cm', locked:false,
+      streak:0, chN:0, chHit:0 };
+
+    // --- 効果音（WebAudio・操作後に有効化） ---
+    var audioCtx=null, soundOn=true;
+    function getAudio(){ var C=window.AudioContext||window.webkitAudioContext; if(!C) return null;
+      if(!audioCtx) audioCtx=new C(); if(audioCtx.state==='suspended') audioCtx.resume(); return audioCtx; }
+    function beep(o){ o=o||{}; if(!soundOn) return; var ctx=getAudio(); if(!ctx) return;
+      var freq=o.freq||880, dur=o.duration||0.08, type=o.type||'sine', gain=o.gain||0.04, when=o.when||0;
+      var now=ctx.currentTime+when, osc=ctx.createOscillator(), amp=ctx.createGain();
+      osc.type=type; osc.frequency.setValueAtTime(freq,now);
+      amp.gain.setValueAtTime(0.0001,now); amp.gain.exponentialRampToValueAtTime(gain,now+0.01);
+      amp.gain.exponentialRampToValueAtTime(0.0001,now+dur);
+      osc.connect(amp); amp.connect(ctx.destination); osc.start(now); osc.stop(now+dur+0.02); }
+    function playCorrect(){ beep({freq:880,duration:0.08,when:0}); beep({freq:1320,duration:0.10,when:0.08}); }
+    function playWrong(){ beep({freq:180,duration:0.12,type:'triangle'}); }
+
+    // --- 正解／不正解エフェクト ---
+    function flashCard(klass){ var c=document.getElementById('app'); c.classList.remove('flashC','flashW');
+      void c.offsetWidth; c.classList.add(klass);
+      c.addEventListener('animationend',function(){ c.classList.remove(klass); },{once:true}); }
+    function spawnStars(){ var wrap=document.querySelector('.rulerbox'); if(!wrap) return;
+      ['⭐','✨','🌟'].forEach(function(e,i){ var el=document.createElement('span');
+        el.className='starParticle'; el.textContent=e;
+        el.style.left=(30+i*20)+'%'; el.style.top='52%'; el.style.animationDelay=(i*0.07)+'s';
+        wrap.appendChild(el); el.addEventListener('animationend',function(){ el.remove(); }); }); }
+    function doShake(){ var w=document.querySelector('.rulerbox'); if(!w) return;
+      w.classList.add('shake'); w.addEventListener('animationend',function(){ w.classList.remove('shake'); },{once:true}); }
+
+    function buildControls(){
+      var c=document.getElementById('controls');
+      var lvHtml='';
+      if(ST.stage==='read'){
+        lvHtml='<div class="bar"><span class="seglabel">レベル</span>'+
+          '<button class="lvbtn on" data-lv="1">★1</button>'+
+          '<button class="lvbtn" data-lv="2">★2</button>'+
+          '<button class="lvbtn" data-lv="3">★3</button>'+
+          '<button class="lvbtn" data-lv="4">★4</button></div>';
+      }
+      c.innerHTML=
+       lvHtml+
+       '<div class="bar2">'+
+        '<span style="display:inline-flex;align-items:center"><span class="seglabel">ものさし</span>'+
+         '<span class="seg" id="segRuler">'+
+          '<button class="on" data-r="easy">やさしい定規</button>'+
+          '<button data-r="wood">木のものさし</button></span></span>'+
+        '<span style="display:inline-flex;align-items:center"><span class="seglabel">モード</span>'+
+         '<span class="seg" id="segMode">'+
+          '<button class="on" data-m="practice">れんしゅう</button>'+
+          '<button data-m="challenge">チャレンジ</button></span></span>'+
+        '<span style="flex:1"></span>'+
+        '<button class="backbtn" id="soundBtn">'+(soundOn?'🔊':'🔇')+'</button>'+
+        '<button class="backbtn" id="backHome">← もどる</button></div>';
+
+      if(ST.stage==='read'){
+        c.querySelectorAll('.lvbtn').forEach(function(b){ b.onclick=function(){
+          c.querySelectorAll('.lvbtn').forEach(function(x){ x.classList.remove('on'); });
+          b.classList.add('on'); ST.level=parseInt(b.dataset.lv,10);
+          ST.streak=0; ST.chN=0; ST.chHit=0; newProblem(); }; });
+      }
+      c.querySelectorAll('#segRuler button').forEach(function(b){ b.onclick=function(){
+        c.querySelectorAll('#segRuler button').forEach(function(x){ x.classList.remove('on'); });
+        b.classList.add('on'); ST.ruler=b.dataset.r; renderStage(); }; });
+      c.querySelectorAll('#segMode button').forEach(function(b){ b.onclick=function(){
+        c.querySelectorAll('#segMode button').forEach(function(x){ x.classList.remove('on'); });
+        b.classList.add('on'); ST.mode=b.dataset.m;
+        ST.streak=0; ST.chN=0; ST.chHit=0; newProblem(); }; });
+      document.getElementById('backHome').onclick=showHome;
+      document.getElementById('soundBtn').onclick=function(){ soundOn=!soundOn; this.textContent=soundOn?'🔊':'🔇'; if(soundOn) getAudio(); };
+    }
+
+    function buildKeypad(){
+      var kp=document.getElementById('keypad');
+      var keys=['1','2','3','4','5','6','7','8','9','back','0','ok'];
+      kp.innerHTML='';
+      keys.forEach(function(k){
+        var b=document.createElement('button'); b.className='kp';
+        if(k==='back'){ b.innerHTML='⌫'; b.onclick=onBack; }
+        else if(k==='ok'){ b.className='kp ok'; b.innerHTML='OK→'; b.onclick=onSubmit; }
+        else { b.textContent=k; b.onclick=function(){ onPress(k); }; }
+        kp.appendChild(b);
+      });
+      document.getElementById('boxCm').onclick=function(){ if(ST.prob.ask!=='mm'){ ST.active='cm'; updateBoxes(); } };
+      document.getElementById('boxMm').onclick=function(){ if(ST.prob.ask!=='cm'){ ST.active='mm'; updateBoxes(); } };
+    }
+
+    function layoutBoxes(){
+      var ask=ST.prob.ask;
+      document.getElementById('wrapCm').style.display=(ask==='mm')?'none':'';
+      document.getElementById('wrapMm').style.display=(ask==='cm')?'none':'';
+      document.getElementById('boxMm').style.width=(ask==='mm')?'78px':'54px';
+    }
+    function updateBoxes(){
+      var bc=document.getElementById('boxCm'), bm=document.getElementById('boxMm');
+      bc.textContent=ST.inCm; bm.textContent=ST.inMm;
+      bc.className='abox'+(ST.active==='cm'?' act':'');
+      bm.className='abox'+(ST.active==='mm'?' act':'');
+    }
+    function onPress(d){
+      if(ST.locked) return;
+      if(ST.active==='cm'){ ST.inCm=d; if(ST.prob.ask==='cmmm') ST.active='mm'; }
+      else { var max=(ST.prob.ask==='mm')?2:1; if(ST.inMm.length<max) ST.inMm+=d; }
+      updateBoxes();
+    }
+    function onBack(){
+      if(ST.locked) return;
+      if(ST.active==='mm'){ if(ST.inMm.length>0) ST.inMm=ST.inMm.slice(0,-1);
+        else if(ST.prob.ask==='cmmm') ST.active='cm'; }
+      else { ST.inCm=''; }
+      updateBoxes();
+    }
+
+    // === MODE ===
+    function renderStage(){
+      clearStage();
+      if(ST.ruler==='easy') drawEasyRuler(); else drawWoodRuler(); // 木は Task 9
+      drawObject(ST.prob, ST.item);
+    }
+    function newProblem(){
+      ST.prob=generateProblem(ST.stage, ST.level);
+      ST.item=pickItem();
+      ST.inCm=''; ST.inMm=''; ST.active=(ST.prob.ask==='mm')?'mm':'cm'; ST.locked=false;
+      document.getElementById('fb').textContent='';
+      layoutBoxes(); renderStage(); updateBoxes(); updateCounter();
+    }
+    function updateCounter(){
+      var c=document.getElementById('counter');
+      if(ST.mode==='practice') c.textContent='れんぞく せいかい: '+ST.streak+'もん';
+      else c.textContent='チャレンジ '+ST.chN+'/10　せいかい '+ST.chHit;
+    }
+    function onSubmit(){
+      if(ST.locked) return;
+      var ok=judge(ST.prob, ST.inCm, ST.inMm);
+      var fb=document.getElementById('fb');
+      if(ST.mode==='practice'){
+        if(ok){ fb.style.color='#1D9E75'; fb.textContent='○ せいかい！';
+          flashCard('flashC'); spawnStars(); playCorrect();
+          ST.streak++; ST.locked=true; updateCounter(); setTimeout(newProblem,900); }
+        else { fb.style.color='#E24B4A'; fb.textContent='ざんねん！ もういっかい';
+          flashCard('flashW'); doShake(); playWrong();
+          ST.streak=0; ST.inCm=''; ST.inMm=''; ST.active=(ST.prob.ask==='mm')?'mm':'cm';
+          updateBoxes(); updateCounter(); }
+      } else {
+        ST.chN++; if(ok){ ST.chHit++; fb.style.color='#1D9E75'; fb.textContent='○';
+          flashCard('flashC'); spawnStars(); playCorrect(); }
+        else { fb.style.color='#E24B4A'; fb.textContent='✗'; flashCard('flashW'); doShake(); playWrong(); }
+        ST.locked=true; updateCounter();
+        if(ST.chN>=10){ setTimeout(function(){ fb.style.color='#1b1f2a';
+          fb.textContent='10もんちゅう '+ST.chHit+'もん せいかい！';
+          ST.chN=0; ST.chHit=0; setTimeout(newProblem,1600); }, 700); }
+        else setTimeout(newProblem,800);
+      }
+    }
+
+    // === NAV ===
+    function showHome(){
+      ST.stage='home';
+      var app=document.getElementById('app');
+      app.innerHTML=
+       '<div class="home-title">どれを えらぶ？</div>'+
+       '<div class="home-grid">'+
+        '<div class="home-main" data-s="read"><span class="t">ものさしを よむ</span></div>'+
+        '<div class="home-row">'+
+         '<div class="home-sub" data-s="mm"><span class="t">ミリで こたえる</span></div>'+
+         '<div class="home-sub" data-s="offset"><span class="t">とちゅうから よむ</span></div>'+
+        '</div></div>';
+      app.querySelectorAll('[data-s]').forEach(function(el){
+        el.onclick=function(){ enterStage(el.dataset.s); };
+      });
+    }
+
+    function enterStage(stageName){
+      ST.stage=stageName; ST.level=1; ST.streak=0; ST.chN=0; ST.chHit=0;
+      var app=document.getElementById('app');
+      app.innerHTML=
+       '<div id="controls" style="margin-bottom:7px"></div>'+
+       '<div class="rulerbox" style="background:#fff;border:1px solid #e7eaf3;border-radius:12px;padding:8px 4px">'+
+       '<svg id="stage" viewBox="0 0 600 130" style="width:100%;display:block"></svg></div>'+
+       '<div class="answerrow" style="display:flex;gap:12px;margin-top:10px;align-items:center">'+
+        '<div style="flex:1;min-width:0">'+
+         '<div style="display:flex;align-items:center;gap:7px;font-size:18px">'+
+          '<span id="wrapCm"><span class="abox act" id="boxCm"></span> cm</span>'+
+          '<span id="wrapMm"><span class="abox" id="boxMm"></span> mm</span></div>'+
+         '<div id="fb" style="height:28px;margin-top:8px;font-size:18px;font-weight:800"></div>'+
+         '<div id="counter" style="font-size:14px;color:#5b6478"></div>'+
+        '</div>'+
+        '<div id="keypad" style="display:grid;grid-template-columns:repeat(3,auto);gap:6px;flex-shrink:0"></div>'+
+       '</div>';
+      stage=document.getElementById('stage');
+      buildControls();   // Task 7
+      buildKeypad();
+      newProblem();
+    }
+
+    showHome();
+
+    // === SELFTEST ===
+    function selftest(){
+      var ok=true, A=function(c,m){ if(!c){ ok=false; console.error('SELFTEST FAIL:',m); } };
+      A(splitLen(74).cm===7 && splitLen(74).mm===4, 'splitLen 74 = 7cm4mm');
+      A(splitLen(90).cm===9 && splitLen(90).mm===0, 'splitLen 90 = 9cm0mm');
+      var p={start:0,end:74,ask:'cmmm'};
+      A(judge(p,'7','4')===true,  'judge 7cm4mm correct');
+      A(judge(p,'7','5')===false, 'judge 7cm5mm wrong');
+      A(judge(p,'7','')===false,  'judge missing mm wrong');
+      A(judge({start:0,end:50,ask:'cm'},'5','')===true, 'judge 5cm correct');
+      A(judge({start:0,end:74,ask:'mm'},'','74')===true,'judge 74mm correct');
+      A(judge({start:20,end:85,ask:'cmmm'},'6','5')===true,'judge start!=0 → 6cm5mm');
+      for(var i=0;i<300;i++){
+        var r1=generateProblem('read',1); A(r1.ask==='cm' && r1.end%10===0 && r1.end>=10 && r1.end<=90,'read L1');
+        var r2=generateProblem('read',2); A(r2.ask==='cmmm' && r2.end%5===0 && r2.end<=90,'read L2');
+        var r3=generateProblem('read',3); A(r3.ask==='cmmm' && r3.end>=1 && r3.end<=99,'read L3');
+        var r4=generateProblem('read',4); A(r4.ask==='cmmm' && r4.end>=11 && r4.end<=99,'read L4');
+        var rm=generateProblem('mm');     A(rm.ask==='mm' && rm.end>=11 && rm.end<=99 && rm.start===0,'mm stage');
+        var ro=generateProblem('offset'); A(ro.ask==='cmmm' && ro.start>0 && ro.end<=99 && ro.end>ro.start,'offset stage');
+      }
+      console.log(ok ? 'SELFTEST PASS' : 'SELFTEST FAIL');
+      return ok;
+    }
+    selftest();
+  })();
+  </script>
+</body>
+</html>
