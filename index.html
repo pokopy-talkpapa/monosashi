@@ -66,8 +66,7 @@
       .seg button{ padding:6px 10px;font-size:13px; }
       .backbtn{ padding:5px 10px;font-size:13px; }
       .abox{ width:52px;height:50px;font-size:24px; }
-      .kp{ width:54px;height:50px;font-size:21px; }
-      #stage{ height:118px; }
+      .kp{ width:50px;height:46px;font-size:20px; }
       #fb{ height:20px!important;font-size:15px!important;margin-top:3px!important; }
       #keypad{ gap:6px!important; }
       .rulerbox{ padding:3px 2px!important; }
@@ -124,34 +123,35 @@
       for(var k in attrs) e.setAttribute(k, attrs[k]); stage.appendChild(e); return e; }
     function clearStage(){ while(stage.firstChild) stage.removeChild(stage.firstChild); }
 
-    // 定規の縦位置（共通）: 本体 y54..98、リボン y32、マーカー先端 y52
+    // 定規の縦位置（共通）: 定規上端 y24、リボン y8、マーカー先端 y22
     function drawEasyRuler(){
-      svgAdd('rect',{x:4,y:54,width:552,height:44,rx:3,
+      svgAdd('rect',{x:4,y:24,width:552,height:44,rx:3,
         fill:'#eef1f7',stroke:'#c7ccda','stroke-width':1});
       for(var mm=0; mm<=100; mm++){
         var h=(mm%10===0)?16:(mm%5===0)?11:7;
-        svgAdd('line',{x1:mmToX(mm),x2:mmToX(mm),y1:54,y2:54+h,
+        svgAdd('line',{x1:mmToX(mm),x2:mmToX(mm),y1:24,y2:24+h,
           stroke:'#5b6478','stroke-width':mm%10===0?1.3:0.7});
       }
       for(var c=0; c<=10; c++){
-        var t=svgAdd('text',{x:mmToX(c*10),y:91,'text-anchor':'middle','font-size':13,fill:'#1b1f2a'});
+        var t=svgAdd('text',{x:mmToX(c*10),y:62,'text-anchor':'middle','font-size':13,fill:'#1b1f2a'});
         t.textContent=c;
       }
     }
 
-    // 木のものさし（竹尺）= コード描画。数字なし・マス目・黒点・赤い半円。目盛りは mmToX で正確
+    function svgImage(attrs){
+      var e=document.createElementNS(SVGNS,'image');
+      for(var k in attrs){ if(k!=='href') e.setAttribute(k,attrs[k]); }
+      e.setAttribute('href',attrs.href);
+      e.setAttributeNS('http://www.w3.org/1999/xlink','xlink:href',attrs.href);
+      stage.appendChild(e); return e;
+    }
+    // 木のものさし（竹尺）= ぽこぴぃ作の画像。引き伸ばさず（縦横同率）横いっぱい。0cm=画像px0, 10cm=px484（黒点5/15cm実測）
+    var WOOD_IMG='assets/takejaku-v3.png';
+    var WOOD_IMG_W=977, WOOD_IMG_H=106;
+    var WOOD_PX0=0, WOOD_PX100=484;
     function drawWoodRuler(){
-      svgAdd('rect',{x:4,y:54,width:552,height:44,rx:3,fill:'#F7D14B',stroke:'#BA7517','stroke-width':1.2});
-      for(var mm=0; mm<=100; mm++){
-        var h=(mm%10===0)?15:(mm%5===0)?10:6;
-        svgAdd('line',{x1:mmToX(mm),x2:mmToX(mm),y1:54,y2:54+h,stroke:'#3a2a06','stroke-width':mm%10===0?1.1:0.6});
-      }
-      for(var c=0; c<=10; c++) svgAdd('line',{x1:mmToX(c*10),x2:mmToX(c*10),y1:76,y2:98,stroke:'#7a5a10','stroke-width':0.7});
-      svgAdd('line',{x1:mmToX(0),x2:mmToX(100),y1:76,y2:76,stroke:'#7a5a10','stroke-width':0.7});
-      for(var c2=1; c2<=9; c2++) svgAdd('circle',{cx:mmToX(c2*10),cy:72,r:2.6,fill:'#1a1206'});
-      for(var c3=0; c3<10; c3++){ var x=mmToX(c3*10+5);
-        svgAdd('path',{d:'M '+(x-4)+' 72 A 4 4 0 0 1 '+(x+4)+' 72',fill:'none',stroke:'#C0392B','stroke-width':1.4});
-        svgAdd('circle',{cx:x,cy:72,r:2,fill:'#C0392B'}); }
+      var scale=(mmToX(100)-mmToX(0))/(WOOD_PX100-WOOD_PX0); // 横較正。縦も同じscale＝引き伸ばしなし
+      svgImage({ x:mmToX(0)-WOOD_PX0*scale, y:22, width:WOOD_IMG_W*scale, height:WOOD_IMG_H*scale, href:WOOD_IMG });
     }
 
     // === OBJECT ===
@@ -165,9 +165,9 @@
 
     function drawObject(prob, item){
       var xs=mmToX(prob.start), xe=mmToX(prob.end);
-      svgAdd('rect',{x:xs,y:32,width:Math.max(xe-xs,2),height:12,rx:2,fill:item.color});
-      svgAdd('path',{d:'M '+xe+' 52 l -7 -13 h 14 z', fill:'#D85A30'});       // 終点・赤
-      if(prob.start>0){ svgAdd('path',{d:'M '+xs+' 52 l -6 -11 h 12 z', fill:'#888780'}); } // 始点・灰
+      svgAdd('rect',{x:xs,y:5,width:Math.max(xe-xs,2),height:11,rx:2,fill:item.color});
+      svgAdd('path',{d:'M '+xe+' 21 l -7 -12 h 14 z', fill:'#D85A30'});       // 終点・赤
+      if(prob.start>0){ svgAdd('path',{d:'M '+xs+' 21 l -6 -10 h 12 z', fill:'#888780'}); } // 始点・灰
     }
 
     // === INPUT/UI ===
@@ -287,7 +287,8 @@
     // === MODE ===
     function renderStage(){
       clearStage();
-      if(ST.ruler==='easy') drawEasyRuler(); else drawWoodRuler(); // 木は Task 9
+      if(ST.ruler==='easy'){ stage.setAttribute('viewBox','0 0 560 78'); drawEasyRuler(); }
+      else { stage.setAttribute('viewBox','0 0 560 145'); drawWoodRuler(); }
       drawObject(ST.prob, ST.item);
     }
     function newProblem(){
@@ -349,7 +350,7 @@
       app.innerHTML=
        '<div id="controls" style="margin-bottom:7px"></div>'+
        '<div class="rulerbox" style="background:#fff;border:1px solid #e7eaf3;border-radius:12px;padding:8px 4px">'+
-       '<svg id="stage" viewBox="0 0 560 104" style="width:100%;display:block"></svg></div>'+
+       '<svg id="stage" viewBox="0 0 560 145" style="width:100%;display:block"></svg></div>'+
        '<div class="answerrow" style="display:flex;gap:12px;margin-top:10px;align-items:center">'+
         '<div style="flex:1;min-width:0">'+
          '<div style="display:flex;align-items:center;gap:7px;font-size:18px">'+
