@@ -140,10 +140,10 @@
       e.setAttributeNS('http://www.w3.org/1999/xlink','xlink:href',attrs.href);
       stage.appendChild(e); return e;
     }
-    // 木のものさし（竹尺）= ぽこぴぃ作の画像。引き伸ばさず（縦横同率）横いっぱい。0cm=画像px0, 10cm=px484（黒点5/15cm実測）
-    var WOOD_IMG='assets/takejaku-v4.png';
-    var WOOD_IMG_W=527, WOOD_IMG_H=61;
-    var WOOD_PX0=0, WOOD_PX100=484;   // 黒点5cm=px242 / 赤マーク10cm=px484 から
+    // 木のものさし（竹尺）= ぽこぴぃ作の画像。引き伸ばさず（縦横同率）横いっぱい。0cm=画像px0, 10cm=px793（cm目盛り12本＝0〜11cm・赤マーク中心px793＝10cm実測）
+    var WOOD_IMG='assets/takejaku-v5.png';
+    var WOOD_IMG_W=879, WOOD_IMG_H=80;
+    var WOOD_PX0=0, WOOD_PX100=793;   // cm目盛りx=[0,80,159,238,318,397,476,555,635,714,793,872] / 赤マーク10cm=px793 から
     function drawWoodRuler(){
       var scale=(mmToX(100)-mmToX(0))/(WOOD_PX100-WOOD_PX0); // 横較正。縦も同じscale＝引き伸ばしなし
       svgImage({ x:mmToX(0)-WOOD_PX0*scale, y:22, width:WOOD_IMG_W*scale, height:WOOD_IMG_H*scale, href:WOOD_IMG });
